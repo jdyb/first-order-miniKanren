@@ -7,8 +7,10 @@
              (let ((actual e-actual) (expected e-expected))
                (if (equal? actual expected)
                  (printf "~s\n" 'success)
-                 (printf "FAILURE\nEXPECTED: ~s\nACTUAL: ~s\n"
-                         expected actual))))))))
+                 (begin
+                   (printf "FAILURE\nEXPECTED: ~s\nACTUAL: ~s\n"
+                           expected actual)
+                   (exit 1)))))))))
 
 (include "unify-tests.rkt")
 (include "disunify-tests.rkt")
