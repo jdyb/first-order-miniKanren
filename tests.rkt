@@ -17,6 +17,7 @@
 (include "symbolo-tests.rkt")
 (include "stringo-tests.rkt")
 (include "numbero-tests.rkt")
+(include "integero-tests.rkt")
 (include "symbolo-numbero-tests.rkt")
 (include "not-stringo-tests.rkt")
 (include "not-numbero-tests.rkt")

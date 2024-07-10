@@ -9,6 +9,7 @@
   symbolo
   stringo
   numbero
+  integero
   not-symbolo
   not-stringo
   not-numbero
@@ -41,6 +42,7 @@
 (define (symbolo t) (lambda (st) (state->stream (typify t symbol? st))))
 (define (stringo t) (lambda (st) (state->stream (typify t string? st))))
 (define (numbero t) (lambda (st) (state->stream (typify t number? st))))
+(define (integero t) (lambda (st) (state->stream (typify t integer? st))))
 (define (not-symbolo t) (lambda (st) (state->stream (distypify t symbol? st))))
 (define (not-stringo t) (lambda (st) (state->stream (distypify t string? st))))
 (define (not-numbero t) (lambda (st) (state->stream (distypify t number? st))))

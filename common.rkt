@@ -258,6 +258,7 @@
     ((eq? pred symbol?) 'sym)
     ((eq? pred string?) 'str)
     ((eq? pred number?) 'num)
+    ((eq? pred integer?) 'int)
     (error "Invalid type")))
 
 (define (pretty-distypes constraint) (list (distype-check->sym (cdr constraint)) (car constraint)))
