@@ -76,6 +76,16 @@
                        (typify u u-type st)
                        (state-simplify st))))))
 
+(define (unify-vector u v st0)
+  (let ((n (vector-length u)))
+  (if (= n (vector-length v))
+    (let f ((i 0) (st1 st0))
+      (if (< i n)
+        (let ((st2 (unify (vector-ref u i) (vector-ref v i) st1)))
+          (and st2 (f (+ i 1) st2)))
+        st1))
+    #f)))
+
 (define (unify u v st)
   (let* ((sub (state-sub st))
          (u (walk u sub))
@@ -86,6 +96,10 @@
       ((var? v)                            (assign-var v u st))
       ((and (pair? u) (pair? v))           (let ((st (unify (car u) (car v) st)))
                                              (and st (unify (cdr u) (cdr v) st))))
+      ((and (struct? u) (struct? v))
+       (unify (struct->vector u) (struct->vector v) st))
+      ((and (vector? u) (vector? v))
+       (unify-vector u v st))
       (else                                (and (eqv? u v) st)))))
 
 ;; Type constraints

@@ -14,6 +14,8 @@
 
 (include "unify-tests.rkt")
 (include "disunify-tests.rkt")
+(include "vector-tests.rkt")
+(include "struct-tests.rkt")
 (include "symbolo-tests.rkt")
 (include "stringo-tests.rkt")
 (include "numbero-tests.rkt")
