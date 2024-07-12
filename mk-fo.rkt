@@ -4,6 +4,7 @@
   =/=
   symbolo
   numbero
+  integero
   stringo
   not-symbolo
   not-numbero
