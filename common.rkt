@@ -5,6 +5,8 @@
  var/fresh
  (struct-out state)
  empty-state
+ state-index
+ state-inc-index
  state->stream
  unify
  disunify
@@ -19,10 +21,9 @@
 (define (var=? x1 x2)
   (= (var-index x1) (var-index x2)))
 (define initial-var (var #f 0))
-(define var/fresh
-  (let ((index 0))
-    (lambda (name) (set! index (+ 1 index))
-      (var name index))))
+
+(define (var/fresh name st)
+  (var name (state-index st)))
 
 ;; States
 (define empty-sub '())
@@ -59,8 +60,15 @@
 (define (var-type-remove t types)
   (remove t types (lambda (v type-constraint) (eq? v (car type-constraint)))))
 
-(struct state (sub diseq types distypes) #:prefab)
-(define empty-state (state empty-sub empty-diseq empty-types empty-distypes))
+(struct state (index sub diseq types distypes) #:prefab)
+(define empty-state (state 1 empty-sub empty-diseq empty-types empty-distypes))
+
+(define (state-inc-index st)
+  (state (+ (state-index st) 1)
+         (state-sub st)
+         (state-diseq st)
+         (state-types st)
+         (state-distypes st)))
 
 (define (state->stream state)
   (if state (cons state #f) #f))
@@ -71,7 +79,7 @@
          (u-type (var-type-ref u types))
          (types (if u-type (var-type-remove u types) types))
          (new-sub (extend-sub u v (state-sub st))))
-    (and new-sub (let ((st (state new-sub (state-diseq st) types (state-distypes st))))
+    (and new-sub (let ((st (state (state-index st) new-sub (state-diseq st) types (state-distypes st))))
                    (if u-type
                        (typify u u-type st)
                        (state-simplify st))))))
@@ -109,7 +117,8 @@
         (let ((u-type (var-type-ref u (state-types st))))
           (if u-type
               (and (eqv? type? u-type) st)
-              (state-simplify (state (state-sub st)
+              (state-simplify (state (state-index st)
+                                     (state-sub st)
                                      (state-diseq st)
                                      (extend-types u type? (state-types st))
                                      (state-distypes st)))))
@@ -122,7 +131,8 @@
       (diff-prefix x (cdr newx) (cons (car newx) acc))))
 
 (define (extend-state/negated-diff newst st mode)
-  (let* ((sub (state-sub st))
+  (let* ((index (state-index st))
+         (sub (state-sub st))
          (types (state-types st))
          (diseq (state-diseq st))
          (distypes (state-distypes st))
@@ -131,12 +141,14 @@
     (cond
       ((not newsub) st)
       ((and (eq? mode 'sub) (not (eq? newsub sub)))
-       (state sub
+       (state index
+              sub
               (extend-diseq (diff-prefix sub newsub '()) diseq)
               types
               distypes))
       ((and (eq? mode 'types) (not (eq? newtypes types)))
-       (state sub
+       (state index
+              sub
               diseq
               types
               (extend-distypes (car (diff-prefix types newtypes '())) distypes)))
@@ -148,19 +160,21 @@
     st))
 
 (define (diseq-simplify st)
-  (let* ((sub (state-sub st))
+  (let* ((index (state-index st))
+         (sub (state-sub st))
          (diseq (state-diseq st))
          (types (state-types st))
          (distypes (state-distypes st))
-         (st (state sub empty-diseq types distypes)))
+         (st (state index sub empty-diseq types distypes)))
     (foldl/and (lambda (=/=s st) (disunify (map car =/=s) (map cdr =/=s) st)) st diseq)))
 
 (define (distype-simplify st)
-  (let* ((sub (state-sub st))
+  (let* ((index (state-index st))
+         (sub (state-sub st))
          (diseq (state-diseq st))
          (types (state-types st))
          (distypes (state-distypes st))
-         (st (state sub diseq types empty-distypes)))
+         (st (state index sub diseq types empty-distypes)))
     (foldl/and (lambda (not-type st) (distypify (car not-type) (cdr not-type) st)) st distypes)))
 
 (define (foldl/and proc acc lst)
@@ -201,7 +215,8 @@
                    (define t (walk tm (state-sub st)))
                    (cond ((pair? t) (loop (cdr t) (loop (car t) st)))
                          ((var? t)  (set! index (+ 1 index))
-                                    (state (extend-sub t (reified-index index) (state-sub st))
+                                    (state (state-index st)
+                                           (extend-sub t (reified-index index) (state-sub st))
                                            (state-diseq st)
                                            (state-types st)
                                            (state-distypes st)))
@@ -209,7 +224,7 @@
     (let* ((walked-sub (walk* tm (state-sub results)))
            (diseq (map (lambda (=/=) (cons (length =/=) =/=)) (state-diseq st)))
            (diseq (map cdr (sort diseq (lambda (x y) (< (car x) (car y))))))
-           (st (state-simplify (state (state-sub st) diseq (state-types st) (state-distypes st))))
+           (st (state-simplify (state (state-index st) (state-sub st) diseq (state-types st) (state-distypes st))))
            (diseq (walk* (state-diseq st) (state-sub results)))
            (diseq (map pretty-diseq (filter-not contains-fresh? diseq)))
            (diseq (map (lambda (=/=) (sort =/= term<?)) diseq))

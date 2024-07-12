@@ -19,8 +19,12 @@
 ;; High level goals
 (define-syntax fresh
   (syntax-rules ()
-    ((_ (x ...) g0 gs ...)
-     (let ((x (var/fresh 'x)) ...) (conj* g0 gs ...)))))
+    ((_ () g0 gs ...) (conj* g0 gs ...))
+    ((_ (x0 xs ...) g0 gs ...)
+     (call/fresh
+       'x0
+       (lambda (x0)
+         (fresh (xs ...) g0 gs ...))))))
 (define-syntax conde
   (syntax-rules ()
     ((_ (g gs ...) (h hs ...) ...)

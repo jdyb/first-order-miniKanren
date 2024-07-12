@@ -10,6 +10,7 @@
   stringo
   numbero
   integero
+  call/fresh
   not-symbolo
   not-stringo
   not-numbero
@@ -28,7 +29,9 @@
 (define (mature s)
   (if (mature? s) s (mature (s))))
 
-
+(define (call/fresh name fn)
+  (lambda (st)
+    (pause (state-inc-index st) (fn (var name (state-index st))))))
 
 (define (disj g1 g2)
   (lambda (st) (mplus (pause st g1)
